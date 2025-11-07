@@ -34,6 +34,18 @@ public class ArticleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newArticle);
     }
 
+    @PutMapping("/article/{id}")
+    public ResponseEntity<Article> putArticle(@PathVariable Long id, @RequestBody ArticleRequestDTO request) {
+        if (!articles.containsKey(id)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Article updateArticle = new Article(id, request.description());
+        articles.put(id, updateArticle);
+
+        return ResponseEntity.ok(updateArticle);
+    }
+
     public record Article(Long id, String description) {
     }
 

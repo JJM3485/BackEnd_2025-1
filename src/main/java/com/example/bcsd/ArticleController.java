@@ -18,11 +18,11 @@ public class ArticleController {
     public ResponseEntity<Article> getArticle(@PathVariable Long id) {
         Article article = articles.get(id);
 
-        if (article != null) {
-            return ResponseEntity.ok(article);
-        } else {
+        if (article == null) {
             return ResponseEntity.notFound().build();
         }
+
+        return ResponseEntity.ok(article);
     }
 
     @PostMapping("/article")
@@ -44,6 +44,17 @@ public class ArticleController {
         articles.put(id, updateArticle);
 
         return ResponseEntity.ok(updateArticle);
+    }
+
+    @DeleteMapping("/article/{id}")
+    public ResponseEntity<Void> deleteArticle(@PathVariable Long id) {
+        Article removedArticle = articles.remove(id);
+
+        if (removedArticle == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.noContent().build();
     }
 
     public record Article(Long id, String description) {

@@ -1,17 +1,18 @@
 package com.example.bcsd;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 public class ArticleController {
 
     private final Map<Long, Article> articles = new HashMap<>();
+    private final AtomicLong idCount = new AtomicLong();
 
     @GetMapping("/article/{id}")
     public ResponseEntity<Article> getArticle(@PathVariable Long id) {
@@ -24,6 +25,18 @@ public class ArticleController {
         }
     }
 
+    @PostMapping("/article")
+    public ResponseEntity<Article> postArticle(@RequestBody ArticleRequestDTO request) {
+        long newId = idCount.incrementAndGet();
+        Article newArticle = new Article(newId, request.description());
+        articles.put(newId, newArticle);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(newArticle);
+    }
+
     public record Article(Long id, String description) {
+    }
+
+    public record ArticleRequestDTO(String description) {
     }
 }

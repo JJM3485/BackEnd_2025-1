@@ -1,62 +1,55 @@
 package com.example.bcsd.Controller;
 
+import com.example.bcsd.DTO.Article;
+import com.example.bcsd.DTO.ArticleRequestDTO;
+import com.example.bcsd.Service.ArticleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-
-import com.example.bcsd.DTO.ArticleRequestDTO;
-import com.example.bcsd.DTO.ArticleEntity;
-
 @RestController
+@RequestMapping("/article")
 public class ArticleController {
 
-    private final Map<Long, ArticleEntity> articles = new HashMap<>();
-    private final AtomicLong idCount = new AtomicLong();
+    private final ArticleService articleService;
 
-    @GetMapping("/article/{id}")
-    public ResponseEntity<ArticleEntity> getArticle(@PathVariable Long id) {
-        ArticleEntity article = articles.get(id);
+    public ArticleController(ArticleService articleService) {
+        this.articleService = articleService;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Article> getArticle(@PathVariable Long id) {
+        Article article = articleService.findArticleById(id);
 
         if (article == null) {
             return ResponseEntity.notFound().build();
         }
-
         return ResponseEntity.ok(article);
     }
 
-    @PostMapping("/article")
-    public ResponseEntity<ArticleEntity> postArticle(@RequestBody ArticleRequestDTO request) {
-        long newId = idCount.incrementAndGet();
-        ArticleEntity newArticle = new ArticleEntity(newId, request.description());
-        articles.put(newId, newArticle);
-
+    @PostMapping
+    public ResponseEntity<Article> postArticle(@RequestBody ArticleRequestDTO request) {
+        Article newArticle = articleService.createArticle(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(newArticle);
     }
 
-    @PutMapping("/article/{id}")
-    public ResponseEntity<ArticleEntity> putArticle(@PathVariable Long id, @RequestBody ArticleRequestDTO request) {
-        if (!articles.containsKey(id)) {
+    @PutMapping("/{id}")
+    public ResponseEntity<Article> putArticle(@PathVariable Long id, @RequestBody ArticleRequestDTO request) {
+        Article updatedArticle = articleService.updateArticle(id, request);
+
+        if (updatedArticle == null) {
             return ResponseEntity.notFound().build();
         }
-
-        ArticleEntity updateArticle = new ArticleEntity(id, request.description());
-        articles.put(id, updateArticle);
-
-        return ResponseEntity.ok(updateArticle);
+        return ResponseEntity.ok(updatedArticle);
     }
 
-    @DeleteMapping("/article/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteArticle(@PathVariable Long id) {
-        ArticleEntity removedArticle = articles.remove(id);
+        Article removedArticle = articleService.deleteArticle(id);
 
         if (removedArticle == null) {
             return ResponseEntity.notFound().build();
         }
-
         return ResponseEntity.noContent().build();
     }
 }

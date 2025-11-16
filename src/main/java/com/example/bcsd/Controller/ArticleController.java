@@ -2,19 +2,27 @@ package com.example.bcsd.Controller;
 
 import com.example.bcsd.DTO.Article;
 import com.example.bcsd.DTO.ArticleRequestDTO;
+import com.example.bcsd.DTO.ArticleResponseDTO; // ArticleResponseDTO 추가
 import com.example.bcsd.Service.ArticleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
-@RequestMapping("/article")
+@RequestMapping("/articles")
 public class ArticleController {
 
     private final ArticleService articleService;
 
     public ArticleController(ArticleService articleService) {
         this.articleService = articleService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ArticleResponseDTO>> getAllArticles() { // 반환 타입 수정
+        List<ArticleResponseDTO> articles = articleService.findAllArticles(); // 반환 타입 수정
+        return ResponseEntity.ok(articles);
     }
 
     @GetMapping("/{id}")

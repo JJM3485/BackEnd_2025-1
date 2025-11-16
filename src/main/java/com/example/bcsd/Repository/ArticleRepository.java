@@ -1,9 +1,11 @@
 package com.example.bcsd.Repository;
 
-import com.example.bcsd.DTO.Article; // DTO 폴더에 있는 ArticleEntity를 import
+import com.example.bcsd.DTO.Article;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -16,7 +18,7 @@ public class ArticleRepository {
     public Article save(Article article) {
         if (article.getId() == null) {
             long newId = idCount.incrementAndGet();
-            article = new Article(newId, article.getDescription());
+            article.setId(newId);
         }
         articles.put(article.getId(), article);
         return article;
@@ -24,6 +26,10 @@ public class ArticleRepository {
 
     public Article findById(Long id) {
         return articles.get(id);
+    }
+
+    public List<Article> findAll() {
+        return new ArrayList<>(articles.values());
     }
 
     public Article deleteById(Long id) {

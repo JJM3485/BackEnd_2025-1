@@ -2,11 +2,11 @@ package com.example.bcsd.Controller;
 
 import com.example.bcsd.DTO.Article;
 import com.example.bcsd.DTO.ArticleRequestDTO;
-import com.example.bcsd.DTO.ArticleResponseDTO; // ArticleResponseDTO 추가
 import com.example.bcsd.Service.ArticleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -20,19 +20,14 @@ public class ArticleController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ArticleResponseDTO>> getAllArticles() { // 반환 타입 수정
-        List<ArticleResponseDTO> articles = articleService.findAllArticles(); // 반환 타입 수정
-        return ResponseEntity.ok(articles);
+    public ResponseEntity<List<Article>> getAllArticles(@RequestParam(required = false) Long boardId) {
+        return ResponseEntity.ok(articleService.findAllArticles(boardId));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Article> getArticle(@PathVariable Long id) {
         Article article = articleService.findArticleById(id);
-
-        if (article == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(article);
+        return (article != null) ? ResponseEntity.ok(article) : ResponseEntity.notFound().build();
     }
 
     @PostMapping
@@ -44,20 +39,12 @@ public class ArticleController {
     @PutMapping("/{id}")
     public ResponseEntity<Article> putArticle(@PathVariable Long id, @RequestBody ArticleRequestDTO request) {
         Article updatedArticle = articleService.updateArticle(id, request);
-
-        if (updatedArticle == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(updatedArticle);
+        return (updatedArticle != null) ? ResponseEntity.ok(updatedArticle) : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteArticle(@PathVariable Long id) {
         Article removedArticle = articleService.deleteArticle(id);
-
-        if (removedArticle == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.noContent().build();
+        return (removedArticle != null) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

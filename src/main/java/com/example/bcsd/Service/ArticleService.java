@@ -1,86 +1,75 @@
 package com.example.bcsd.Service;
 
-import com.example.bcsd.DTO.*;
+import com.example.bcsd.DTO.Article;
+import com.example.bcsd.DTO.ArticleRequestDTO;
+import com.example.bcsd.DTO.Board;
 import com.example.bcsd.Repository.ArticleRepository;
 import com.example.bcsd.Repository.BoardRepository;
-import com.example.bcsd.Repository.MemberRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class ArticleService {
 
     private final ArticleRepository articleRepository;
-    private final MemberRepository memberRepository;
     private final BoardRepository boardRepository;
 
-    public ArticleService(ArticleRepository articleRepository,
-                          MemberRepository memberRepository,
-                          BoardRepository boardRepository) {
+    public ArticleService(ArticleRepository articleRepository, BoardRepository boardRepository) {
         this.articleRepository = articleRepository;
-        this.memberRepository = memberRepository;
         this.boardRepository = boardRepository;
     }
 
-    public List<ArticleResponseDTO> findAllArticles() {
-        List<Article> articles = articleRepository.findAll();
-        List<ArticleResponseDTO> responseList = new ArrayList<>();
-
-        for (Article article : articles) {
-            Member member = memberRepository.findById(article.getAuthorId());
-            String authorName = (member != null) ? member.getName() : "알 수 없는 사용자";
-
-            Board board = boardRepository.findById(article.getBoardId());
-            String boardName = (board != null) ? board.getName() : "알 수 없는 게시판";
-
-            ArticleResponseDTO dto = new ArticleResponseDTO(
-                    boardName,
-                    article.getTitle(),
-                    authorName,
-                    article.getCreatedAt(),
-                    article.getContent()
-            );
-            responseList.add(dto);
-        }
-        return responseList;
+    @Transactional(readOnly = true)
+    public String getBoardName(Long boardId) {
+        if (boardId == null) return "전체 게시판";
+        Board board = boardRepository.findById(boardId);
+        return (board != null) ? board.getName() : "모르는 게시판";
     }
 
+    @Transactional(readOnly = true)
+    public List<Article> findAllArticles(Long boardId) {
+        if (boardId == null) {
+            return articleRepository.findAll();
+        }
+        return articleRepository.findByBoardId(boardId);
+    }
+
+    @Transactional(readOnly = true)
     public Article findArticleById(Long id) {
         return articleRepository.findById(id);
     }
 
+    @Transactional
     public Article createArticle(ArticleRequestDTO request) {
-        Long tmpAuthorId = 1L;
-
         Article newArticle = new Article(
-                tmpAuthorId,
+                request.authorId(),
                 request.boardId(),
                 request.title(),
                 request.content()
         );
-
-        return articleRepository.save(newArticle);
+        return articleRepository.insert(newArticle);
     }
 
+    @Transactional
     public Article updateArticle(Long id, ArticleRequestDTO request) {
         Article existArticle = articleRepository.findById(id);
+        if (existArticle == null) return null;
 
-        if (existArticle == null) {
-            return null;
-        }
-
-        existArticle.setBoardId(request.boardId());
         existArticle.setTitle(request.title());
         existArticle.setContent(request.content());
-        existArticle.setUpdatedAt(LocalDateTime.now());
 
-        return articleRepository.save(existArticle);
+        articleRepository.update(id, existArticle);
+        return articleRepository.findById(id);
     }
 
+    @Transactional
     public Article deleteArticle(Long id) {
-        return articleRepository.deleteById(id);
+        Article existArticle = articleRepository.findById(id);
+        if (existArticle == null) return null;
+
+        articleRepository.delete(id);
+        return existArticle;
     }
 }

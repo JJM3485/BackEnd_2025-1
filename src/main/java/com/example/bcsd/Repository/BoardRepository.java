@@ -1,38 +1,33 @@
 package com.example.bcsd.Repository;
 
 import com.example.bcsd.DTO.Board;
-import jakarta.annotation.PostConstruct;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.List;
 
 @Repository
 public class BoardRepository {
 
-    private final Map<Long, Board> boards = new HashMap<>();
-    private final AtomicLong idCount = new AtomicLong();
+    private final JdbcTemplate jdbcTemplate;
 
-    public Board save(Board board) {
-        if (board.getId() == null) {
-            long newId = idCount.incrementAndGet();
-            board.setId(newId);
-        }
-        boards.put(board.getId(), board);
-        return board;
+    public BoardRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public Board findById(Long id) {
-        return boards.get(id);
+        String sql = "SELECT * FROM board WHERE id = ?";
+        List<Board> result = jdbcTemplate.query(sql, boardRowMapper(), id);
+        return result.isEmpty() ? null : result.get(0);
     }
 
-    @PostConstruct
-    public void initData() {
-        Board board1 = new Board("자유게시판");
-        save(board1);
-
-        Board board2 = new Board("유자게시판");
-        save(board2);
+    private RowMapper<Board> boardRowMapper() {
+        return (rs, rowNum) -> {
+            Board board = new Board();
+            board.setId(rs.getLong("id"));
+            board.setName(rs.getString("name"));
+            return board;
+        };
     }
 }

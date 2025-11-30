@@ -3,8 +3,11 @@ package com.example.bcsd.Service;
 import com.example.bcsd.DTO.Article;
 import com.example.bcsd.DTO.ArticleRequestDTO;
 import com.example.bcsd.DTO.Board;
+import com.example.bcsd.Exception.AllException;
 import com.example.bcsd.Repository.ArticleRepository;
 import com.example.bcsd.Repository.BoardRepository;
+import com.example.bcsd.Repository.MemberRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,51 +17,88 @@ import java.util.List;
 public class ArticleService {
 
     private final ArticleRepository articleRepository;
+    private final MemberRepository memberRepository;
     private final BoardRepository boardRepository;
 
-    public ArticleService(ArticleRepository articleRepository, BoardRepository boardRepository) {
+    public ArticleService(ArticleRepository articleRepository,
+                          MemberRepository memberRepository,
+                          BoardRepository boardRepository) {
         this.articleRepository = articleRepository;
+        this.memberRepository = memberRepository;
         this.boardRepository = boardRepository;
     }
 
+    // HTML 상단에 게시판 이름 표시용
     @Transactional(readOnly = true)
     public String getBoardName(Long boardId) {
         if (boardId == null) return "전체 게시판";
         Board board = boardRepository.findById(boardId);
-        return (board != null) ? board.getName() : "모르는 게시판";
+        if (board == null) {
+            throw new AllException(HttpStatus.NOT_FOUND, "존재하지 않는 게시판입니다.");
+        }
+        return board.getName();
     }
 
+    // 게시글 목록 조회 (JSON, HTML 공용) -> Article 리스트 반환
     @Transactional(readOnly = true)
-    public List<Article> findAllArticles(Long boardId) {
+    public List<Article> getAllArticles(Long boardId) {
         if (boardId == null) {
             return articleRepository.findAll();
+        }
+
+        if (boardRepository.findById(boardId) == null) {
+            throw new AllException(HttpStatus.NOT_FOUND, "존재하지 않는 게시판입니다.");
         }
         return articleRepository.findByBoardId(boardId);
     }
 
     @Transactional(readOnly = true)
     public Article findArticleById(Long id) {
-        return articleRepository.findById(id);
+        Article article = articleRepository.findById(id);
+        if (article == null) {
+            throw new AllException(HttpStatus.NOT_FOUND, "존재하지 않는 게시글입니다.");
+        }
+        return article;
     }
 
     @Transactional
     public Article createArticle(ArticleRequestDTO request) {
+        if (request.title() == null || request.content() == null ||
+                request.authorId() == null || request.boardId() == null) {
+            throw new AllException(HttpStatus.BAD_REQUEST, "필수 값이 누락되었습니다.");
+        }
+
+        if (memberRepository.findById(request.authorId()) == null) {
+            throw new AllException(HttpStatus.BAD_REQUEST, "존재하지 않는 사용자입니다.");
+        }
+
+        if (boardRepository.findById(request.boardId()) == null) {
+            throw new AllException(HttpStatus.BAD_REQUEST, "존재하지 않는 게시판입니다.");
+        }
+
         Article newArticle = new Article(
                 request.authorId(),
                 request.boardId(),
                 request.title(),
                 request.content()
         );
-        return articleRepository.insert(newArticle);
+        return articleRepository.save(newArticle);
     }
 
     @Transactional
     public Article updateArticle(Long id, ArticleRequestDTO request) {
         Article existArticle = articleRepository.findById(id);
-        if (existArticle == null) return null;
+        if (existArticle == null) {
+            throw new AllException(HttpStatus.NOT_FOUND, "존재하지 않는 게시글입니다.");
+        }
 
-        existArticle.setTitle(request.title());
-        existArticle.setContent(request.content());
+        if (request.boardId() != null && boardRepository.findById(request.boardId()) == null) {
+            throw new AllException(HttpStatus.BAD_REQUEST, "존재하지 않는 게시판입니다.");
+        }
+
+        if (request.title() != null) existArticle.setTitle(request.title());
+        if (request.content() != null) existArticle.setContent(request.content());
+        if (request.boardId() != null) existArticle.setBoardId(request.boardId());
 
         articleRepository.update(id, existArticle);
         return articleRepository.findById(id);
@@ -67,7 +107,9 @@ public class ArticleService {
     @Transactional
     public Article deleteArticle(Long id) {
         Article existArticle = articleRepository.findById(id);
-        if (existArticle == null) return null;
+        if (existArticle == null) {
+            throw new AllException(HttpStatus.NOT_FOUND, "존재하지 않는 게시글입니다.");
+        }
 
         articleRepository.delete(id);
         return existArticle;

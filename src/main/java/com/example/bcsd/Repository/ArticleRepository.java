@@ -20,7 +20,7 @@ public class ArticleRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public Article insert(Article article) {
+    public Article save(Article article) {
         String sql = "INSERT INTO article (author_id, board_id, title, content) VALUES (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -37,28 +37,32 @@ public class ArticleRepository {
         return article;
     }
 
+    public List<Article> findByBoardId(Long boardId) {
+        if (boardId == null) return findAll();
+        String sql = "SELECT * FROM article WHERE board_id = ?";
+        return jdbcTemplate.query(sql, articleRowMapper(), boardId);
+    }
+
     public List<Article> findAll() {
         String sql = "SELECT * FROM article";
         return jdbcTemplate.query(sql, articleRowMapper());
     }
 
-    public List<Article> findByBoardId(Long boardId) {
-        String sql = "SELECT * FROM article WHERE board_id = ?";
-        return jdbcTemplate.query(sql, articleRowMapper(), boardId);
-    }
-
     public Article findById(Long id) {
+        if (id == null) return null;
         String sql = "SELECT * FROM article WHERE id = ?";
         List<Article> result = jdbcTemplate.query(sql, articleRowMapper(), id);
         return result.isEmpty() ? null : result.get(0);
     }
 
     public void update(Long id, Article article) {
+        if (id == null) return;
         String sql = "UPDATE article SET title = ?, content = ? WHERE id = ?";
         jdbcTemplate.update(sql, article.getTitle(), article.getContent(), id);
     }
 
     public void delete(Long id) {
+        if (id == null) return;
         String sql = "DELETE FROM article WHERE id = ?";
         jdbcTemplate.update(sql, id);
     }

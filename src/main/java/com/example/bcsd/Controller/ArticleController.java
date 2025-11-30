@@ -21,13 +21,12 @@ public class ArticleController {
 
     @GetMapping
     public ResponseEntity<List<Article>> getAllArticles(@RequestParam(required = false) Long boardId) {
-        return ResponseEntity.ok(articleService.findAllArticles(boardId));
+        return ResponseEntity.ok(articleService.getAllArticles(boardId));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Article> getArticle(@PathVariable Long id) {
-        Article article = articleService.findArticleById(id);
-        return (article != null) ? ResponseEntity.ok(article) : ResponseEntity.notFound().build();
+        return ResponseEntity.ok(articleService.findArticleById(id));
     }
 
     @PostMapping
@@ -38,13 +37,12 @@ public class ArticleController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Article> putArticle(@PathVariable Long id, @RequestBody ArticleRequestDTO request) {
-        Article updatedArticle = articleService.updateArticle(id, request);
-        return (updatedArticle != null) ? ResponseEntity.ok(updatedArticle) : ResponseEntity.notFound().build();
+        return ResponseEntity.ok(articleService.updateArticle(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteArticle(@PathVariable Long id) {
-        Article removedArticle = articleService.deleteArticle(id);
-        return (removedArticle != null) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        articleService.deleteArticle(id);
+        return ResponseEntity.noContent().build();
     }
 }

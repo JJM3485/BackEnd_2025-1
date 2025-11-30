@@ -20,7 +20,7 @@ public class PostController {
 
     @GetMapping("/posts")
     public String getPostsView(@RequestParam(required = false) Long boardId, Model model) {
-        List<Article> articles = articleService.findAllArticles(boardId);
+        List<Article> articles = articleService.getAllArticles(boardId);
         String boardName = articleService.getBoardName(boardId);
 
         model.addAttribute("boardName", boardName);

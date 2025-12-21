@@ -1,7 +1,7 @@
 package com.example.bcsd.Service;
 
-import com.example.bcsd.DTO.Article;
 import com.example.bcsd.DTO.Board;
+import com.example.bcsd.DTO.Article;
 import com.example.bcsd.Exception.AllException;
 import com.example.bcsd.Repository.ArticleRepository;
 import com.example.bcsd.Repository.BoardRepository;
@@ -24,7 +24,7 @@ public class BoardService {
 
     @Transactional
     public Board createBoard(Board board) {
-        if (board.getName() == null) {
+        if (board.getName() == null || board.getName().trim().isEmpty()) {
             throw new AllException(HttpStatus.BAD_REQUEST, "게시판 이름은 필수입니다.");
         }
         return boardRepository.save(board);

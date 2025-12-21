@@ -28,7 +28,6 @@ public class ArticleService {
         this.boardRepository = boardRepository;
     }
 
-    // HTML 상단에 게시판 이름 표시용
     @Transactional(readOnly = true)
     public String getBoardName(Long boardId) {
         if (boardId == null) return "전체 게시판";
@@ -39,13 +38,11 @@ public class ArticleService {
         return board.getName();
     }
 
-    // 게시글 목록 조회 (JSON, HTML 공용) -> Article 리스트 반환
     @Transactional(readOnly = true)
     public List<Article> getAllArticles(Long boardId) {
         if (boardId == null) {
             return articleRepository.findAll();
         }
-
         if (boardRepository.findById(boardId) == null) {
             throw new AllException(HttpStatus.NOT_FOUND, "존재하지 않는 게시판입니다.");
         }
@@ -63,9 +60,10 @@ public class ArticleService {
 
     @Transactional
     public Article createArticle(ArticleRequestDTO request) {
-        if (request.title() == null || request.content() == null ||
+        if (request.title() == null || request.title().trim().isEmpty() ||
+                request.content() == null || request.content().trim().isEmpty() ||
                 request.authorId() == null || request.boardId() == null) {
-            throw new AllException(HttpStatus.BAD_REQUEST, "필수 값이 누락되었습니다.");
+            throw new AllException(HttpStatus.BAD_REQUEST, "필수 값이 누락되었거나 공백입니다.");
         }
 
         if (memberRepository.findById(request.authorId()) == null) {
@@ -96,9 +94,15 @@ public class ArticleService {
             throw new AllException(HttpStatus.BAD_REQUEST, "존재하지 않는 게시판입니다.");
         }
 
-        if (request.title() != null) existArticle.setTitle(request.title());
-        if (request.content() != null) existArticle.setContent(request.content());
-        if (request.boardId() != null) existArticle.setBoardId(request.boardId());
+        if (request.title() != null && !request.title().trim().isEmpty()) {
+            existArticle.setTitle(request.title());
+        }
+        if (request.content() != null && !request.content().trim().isEmpty()) {
+            existArticle.setContent(request.content());
+        }
+        if (request.boardId() != null) {
+            existArticle.setBoardId(request.boardId());
+        }
 
         articleRepository.update(id, existArticle);
         return articleRepository.findById(id);
@@ -115,3 +119,4 @@ public class ArticleService {
         return existArticle;
     }
 }
+

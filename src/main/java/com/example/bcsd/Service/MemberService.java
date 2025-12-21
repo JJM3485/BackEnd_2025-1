@@ -24,8 +24,10 @@ public class MemberService {
 
     @Transactional
     public Member createMember(Member member) {
-        if (member.getName() == null || member.getEmail() == null || member.getPassword() == null) {
-            throw new AllException(HttpStatus.BAD_REQUEST, "필수 값이 누락되었습니다.");
+        if (member.getName() == null || member.getName().trim().isEmpty() ||
+                member.getEmail() == null || member.getEmail().trim().isEmpty() ||
+                member.getPassword() == null || member.getPassword().trim().isEmpty()) {
+            throw new AllException(HttpStatus.BAD_REQUEST, "필수 값이 누락되었거나 공백입니다.");
         }
 
         if (memberRepository.findByEmail(member.getEmail()).isPresent()) {
@@ -51,14 +53,23 @@ public class MemberService {
             throw new AllException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다.");
         }
 
-        if (member.getEmail() != null && !member.getEmail().equals(existMember.getEmail())) {
+        if (member.getEmail() != null && !member.getEmail().trim().isEmpty() && !member.getEmail().equals(existMember.getEmail())) {
             if (memberRepository.findByEmail(member.getEmail()).isPresent()) {
-                throw new AllException(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다.");
+                throw new AllException(HttpStatus.CONFLICT, "존재하는 이메일입니다.");
             }
+            existMember.setEmail(member.getEmail());
         }
 
-        memberRepository.update(id, member);
-        return member;
+        if (member.getName() != null && !member.getName().trim().isEmpty()) {
+            existMember.setName(member.getName());
+        }
+
+        if (member.getPassword() != null && !member.getPassword().trim().isEmpty()) {
+            existMember.setPassword(member.getPassword());
+        }
+
+        memberRepository.update(id, existMember);
+        return existMember;
     }
 
     @Transactional

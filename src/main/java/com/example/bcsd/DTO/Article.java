@@ -1,6 +1,5 @@
 package com.example.bcsd.DTO;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,13 +17,13 @@ public class Article {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "author_id", nullable = false)
-    @JsonProperty("author_id")
-    private Long authorId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = false)
+    private Member author;
 
-    @Column(name = "board_id", nullable = false)
-    @JsonProperty("board_id")
-    private Long boardId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "board_id", nullable = false)
+    private Board board;
 
     @Column(nullable = false)
     private String title;
@@ -33,18 +32,15 @@ public class Article {
     private String content;
 
     @Column(name = "created_date")
-    @JsonProperty("created_date")
     private Timestamp createdDate;
 
     @Column(name = "modified_date")
-    @JsonProperty("modified_date")
     private Timestamp modifiedDate;
 
-    public Article(Long authorId, Long boardId, String title, String content) {
-        this.authorId = authorId;
-        this.boardId = boardId;
+    public Article(Member author, Board board, String title, String content) {
+        this.author = author;
+        this.board = board;
         this.title = title;
         this.content = content;
     }
 }
-

@@ -5,6 +5,7 @@ import com.example.bcsd.DTO.Member;
 import com.example.bcsd.Exception.AllException;
 import com.example.bcsd.Repository.ArticleRepository;
 import com.example.bcsd.Repository.MemberRepository;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,9 @@ public class MemberService {
             throw new AllException(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다.");
         }
 
+        String encryptedPassword = BCrypt.hashpw(member.getPassword(), BCrypt.gensalt());
+        member.setPassword(encryptedPassword);
+
         return memberRepository.save(member);
     }
 
@@ -66,7 +70,8 @@ public class MemberService {
         }
 
         if (member.getPassword() != null && !member.getPassword().trim().isEmpty()) {
-            existMember.setPassword(member.getPassword());
+            String encryptedPassword = BCrypt.hashpw(member.getPassword(), BCrypt.gensalt());
+            existMember.setPassword(encryptedPassword);
         }
 
         return existMember;
@@ -86,5 +91,16 @@ public class MemberService {
         }
 
         memberRepository.delete(existMember);
+    }
+
+    public Member login(String email, String password) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new AllException(HttpStatus.NOT_FOUND, "존재하지 않는 이메일입니다."));
+
+        if (!BCrypt.checkpw(password, member.getPassword())) {
+            throw new AllException(HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다.");
+        }
+
+        return member;
     }
 }

@@ -2,17 +2,37 @@ package com.example.bcsd.Controller;
 
 import com.example.bcsd.DTO.Member;
 import com.example.bcsd.Service.MemberService;
+import com.example.bcsd.Util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/members")
 public class MemberController {
 
     private final MemberService memberService;
+    private final JwtUtil jwtUtil;
 
-    public MemberController(MemberService memberService) {
+    public MemberController(MemberService memberService, JwtUtil jwtUtil) {
         this.memberService = memberService;
+        this.jwtUtil = jwtUtil;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginData) {
+        String email = loginData.get("email");
+        String password = loginData.get("password");
+
+        Member member = memberService.login(email, password);
+        String token = jwtUtil.createToken(member.getId());
+
+        Map<String, String> response = new HashMap<>();
+        response.put("token", token);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
